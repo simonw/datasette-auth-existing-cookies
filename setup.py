@@ -21,6 +21,7 @@ setup(
     url="https://github.com/simonw/datasette-auth-cookie-api",
     license="Apache License, Version 2.0",
     version=VERSION,
+    python_requires=">=3.6",
     packages=["datasette_auth_cookie_api"],
     entry_points={"datasette": ["auth_cookie_api = datasette_auth_cookie_api"]},
     install_requires=["httpx"],
