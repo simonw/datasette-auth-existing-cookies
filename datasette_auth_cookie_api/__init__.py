@@ -23,7 +23,7 @@ def asgi_wrapper(datasette):
             original_cookies=original_cookies,
             require_auth=require_auth,
             # TODO: Fix this security hole:
-            cookie_secret='1234',
+            cookie_secret="1234",
         )
 
     return wrap_with_asgi_auth

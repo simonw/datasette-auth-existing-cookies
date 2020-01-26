@@ -123,13 +123,16 @@ class CookieApiAuth:
         # Passed all the tests, return the decoded auth cookie
         return decoded
 
+    async def json_from_api_for_cookies(self, cookies):
+        response = await httpx.AsyncClient().get(self.api_url, cookies=cookies)
+        return response.json()
+
     async def handle_missing_auth(self, scope, receive, send):
         # We authenticate the user by forwarding their cookies
         # on to the configured API endpoint and seeing what
         # we get back.
         original_cookies, cookie_hash = self.original_cookies_and_hash(scope)
-        response = await httpx.AsyncClient().get(self.api_url, cookies=original_cookies)
-        auth = response.json()
+        auth = await self.json_from_api_for_cookies(original_cookies)
         # If auth is not '{}' set cookie and forward request
         if auth:
             signer = Signer(self.cookie_secret)
