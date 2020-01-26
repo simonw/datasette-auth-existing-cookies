@@ -24,7 +24,7 @@ setup(
     python_requires=">=3.6",
     packages=["datasette_auth_cookie_api"],
     entry_points={"datasette": ["auth_cookie_api = datasette_auth_cookie_api"]},
-    install_requires=["httpx"],
+    install_requires=["httpx", "itsdangerous"],
     extras_require={
         "test": ["datasette", "pytest", "pytest-asyncio", "asgiref~=3.1.2"]
     },

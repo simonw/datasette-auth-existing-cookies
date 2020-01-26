@@ -7,14 +7,9 @@ import time
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qsl, urlencode, quote
 
-from .utils import (
-    BadSignature,
-    Signer,
-    force_list,
-    send_html,
-    cookies_from_scope,
-    url_from_scope,
-)
+from itsdangerous import URLSafeSerializer, BadSignature
+
+from .utils import force_list, send_html, cookies_from_scope, url_from_scope
 
 
 class CookieApiAuth:
@@ -100,12 +95,11 @@ class CookieApiAuth:
         if not auth_cookie:
             return None
         # Decode the signed cookie
-        signer = Signer(self.cookie_secret)
+        signer = URLSafeSerializer(self.cookie_secret, "auth-cookie")
         try:
-            cookie_value = signer.unsign(auth_cookie)
+            decoded = signer.loads(auth_cookie)
         except BadSignature:
             return None
-        decoded = json.loads(cookie_value)
         # Has the cookie expired?
         if self.cookie_ttl is not None:
             if "ts" not in decoded:
@@ -135,12 +129,10 @@ class CookieApiAuth:
         auth = await self.json_from_api_for_cookies(original_cookies)
         # If auth is not '{}' set cookie and forward request
         if auth:
-            signer = Signer(self.cookie_secret)
-            signed_cookie = signer.sign(
-                json.dumps(
-                    dict(auth, ts=int(time.time()), verify_hash=cookie_hash),
-                    separators=(",", ":"),
-                )
+            signer = URLSafeSerializer(self.cookie_secret, "auth-cookie")
+            signed_cookie = signer.dumps(
+                dict(auth, ts=int(time.time()), verify_hash=cookie_hash),
+                separators=(",", ":"),
             )
             await self.app(
                 dict(scope, auth=auth),
@@ -151,8 +143,8 @@ class CookieApiAuth:
             )
         else:
             # Redirect user to the login page
-            signer = Signer(self.cookie_secret)
-            signed_redirect = signer.sign(url_from_scope(scope))
+            signer = URLSafeSerializer(self.cookie_secret, "login-redirect")
+            signed_redirect = signer.dumps(url_from_scope(scope))
             await send_html(
                 send,
                 "",

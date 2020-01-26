@@ -2,8 +2,9 @@ from urllib.parse import quote
 import pytest
 from asgiref.testing import ApplicationCommunicator
 
+from itsdangerous import URLSafeSerializer
+
 from datasette_auth_cookie_api.cookie_api_auth import CookieApiAuth
-from datasette_auth_cookie_api.utils import Signer
 
 
 class CookieApiAuthTest(CookieApiAuth):
@@ -45,8 +46,8 @@ async def test_redirects_to_login_page(path, auth_app):
     assert "http.response.start" == output["type"]
     assert 302 == output["status"]
     headers = tuple([tuple(pair) for pair in output["headers"]])
-    signer = Signer(auth_app.cookie_secret)
-    next_sig = quote(signer.sign("https://demo.example.com{}".format(path)))
+    signer = URLSafeSerializer(auth_app.cookie_secret, "login-redirect")
+    next_sig = quote(signer.dumps("https://demo.example.com{}".format(path)))
     assert (
         b"location",
         ("https://www.example.com/login?next_sig={}".format(next_sig)).encode("utf8"),
