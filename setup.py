@@ -26,7 +26,7 @@ setup(
     entry_points={
         "datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]
     },
-    install_requires=["httpx", "itsdangerous"],
+    install_requires=["appdirs", "httpx", "itsdangerous"],
     extras_require={
         "test": ["datasette", "pytest", "pytest-asyncio", "asgiref~=3.1.2"]
     },
