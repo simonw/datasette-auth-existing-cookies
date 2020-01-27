@@ -13,20 +13,20 @@ def get_long_description():
 
 
 setup(
-    name="datasette-auth-cookie-api",
-    description="Datasette plugin that authenticates users by passing their cookies to an API",
+    name="datasette-auth-existing-cookies",
+    description="Datasette plugin that authenticates users based on existing domain cookies",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     author="Simon Willison",
-    url="https://github.com/simonw/datasette-auth-cookie-api",
+    url="https://github.com/simonw/datasette-auth-existing-cookies",
     license="Apache License, Version 2.0",
     version=VERSION,
     python_requires=">=3.6",
-    packages=["datasette_auth_cookie_api"],
-    entry_points={"datasette": ["auth_cookie_api = datasette_auth_cookie_api"]},
+    packages=["datasette_auth_existing_cookies"],
+    entry_points={"datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]},
     install_requires=["httpx", "itsdangerous"],
     extras_require={
         "test": ["datasette", "pytest", "pytest-asyncio", "asgiref~=3.1.2"]
     },
-    tests_require=["datasette-auth-cookie-api[test]"],
+    tests_require=["datasette-auth-existing-cookies[test]"],
 )

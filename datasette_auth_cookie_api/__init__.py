@@ -5,7 +5,7 @@ from .cookie_api_auth import CookieApiAuth
 
 @hookimpl
 def asgi_wrapper(datasette):
-    config = datasette.plugin_config("datasette-auth-cookie-api") or {}
+    config = datasette.plugin_config("datasette-auth-existing-cookies") or {}
     api_url = config["api_url"]
     auth_redirect_url = config["auth_redirect_url"]
     original_cookies = config["original_cookies"]
