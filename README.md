@@ -6,7 +6,7 @@
 
 Datasette plugin that authenticates users based on existing domain cookies.
 
-**STATUS: Work in progress**. This is currently insecure. Do not use it.
+**STATUS: Work in progress**.
 
 ## When to use this
 
