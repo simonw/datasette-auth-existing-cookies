@@ -4,10 +4,10 @@ from asgiref.testing import ApplicationCommunicator
 
 from itsdangerous import URLSafeSerializer
 
-from datasette_auth_cookie_api.cookie_api_auth import CookieApiAuth
+from datasette_auth_existing_cookies.existing_cookies_auth import ExistingCookiesAuth
 
 
-class CookieApiAuthTest(CookieApiAuth):
+class ExistingCookiesAuthTest(ExistingCookiesAuth):
     mock_api_json = {}
 
     async def json_from_api_for_cookies(self, cookies):
@@ -16,7 +16,7 @@ class CookieApiAuthTest(CookieApiAuth):
 
 @pytest.fixture
 def auth_app():
-    return CookieApiAuthTest(
+    return ExistingCookiesAuthTest(
         hello_world_app,
         api_url="https://api.example.com/user-from-cookie",
         auth_redirect_url="https://www.example.com/login",

@@ -1,6 +1,6 @@
 from datasette import hookimpl
 
-from .cookie_api_auth import CookieApiAuth
+from .existing_cookies_auth import ExistingCookiesAuth
 
 
 @hookimpl
@@ -16,7 +16,7 @@ def asgi_wrapper(datasette):
         require_auth = config["require_auth"]
 
     def wrap_with_asgi_auth(app):
-        return CookieApiAuth(
+        return ExistingCookiesAuth(
             app,
             api_url=api_url,
             auth_redirect_url=auth_redirect_url,

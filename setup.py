@@ -23,7 +23,9 @@ setup(
     version=VERSION,
     python_requires=">=3.6",
     packages=["datasette_auth_existing_cookies"],
-    entry_points={"datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]},
+    entry_points={
+        "datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]
+    },
     install_requires=["httpx", "itsdangerous"],
     extras_require={
         "test": ["datasette", "pytest", "pytest-asyncio", "asgiref~=3.1.2"]

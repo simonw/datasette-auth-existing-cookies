@@ -12,7 +12,7 @@ from itsdangerous import URLSafeSerializer, BadSignature
 from .utils import force_list, send_html, cookies_from_scope, url_from_scope
 
 
-class CookieApiAuth:
+class ExistingCookiesAuth:
     redirect_path_blacklist = ["/favicon.ico", "/-/static/*", "/-/static-plugins/*"]
     cacheable_prefixes = ["/-/static/", "/-/static-plugins/"]
     cookie_name = "_api_auth"
