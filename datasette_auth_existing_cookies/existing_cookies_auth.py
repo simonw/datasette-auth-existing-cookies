@@ -141,8 +141,7 @@ class ExistingCookiesAuth:
         if auth:
             signer = URLSafeSerializer(self.cookie_secret, "auth-cookie")
             signed_cookie = signer.dumps(
-                dict(auth, ts=int(time.time()), verify_hash=cookie_hash),
-                separators=(",", ":"),
+                dict(auth, ts=int(time.time()), verify_hash=cookie_hash)
             )
             await self.app(
                 dict(scope, auth=auth),
