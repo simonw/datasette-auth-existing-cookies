@@ -14,9 +14,11 @@ class ExistingCookiesAuthTest(ExistingCookiesAuth):
         return self.mock_api_json
 
 
-@pytest.fixture
-def auth_app():
-    return ExistingCookiesAuthTest(
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["/", "/fixtures", "/foo/bar"])
+@pytest.mark.parametrize("next_secret", [None, "secret"])
+async def test_redirects_to_login_page(next_secret, path):
+    auth_app = ExistingCookiesAuthTest(
         hello_world_app,
         api_url="https://api.example.com/user-from-cookie",
         auth_redirect_url="https://www.example.com/login",
@@ -24,12 +26,8 @@ def auth_app():
         cookie_secret="foo",
         cookie_ttl=10,
         require_auth=True,
+        next_secret=next_secret,
     )
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("path", ["/", "/fixtures", "/foo/bar"])
-async def test_redirects_to_login_page(path, auth_app):
     instance = ApplicationCommunicator(
         auth_app,
         {
@@ -46,11 +44,17 @@ async def test_redirects_to_login_page(path, auth_app):
     assert "http.response.start" == output["type"]
     assert 302 == output["status"]
     headers = tuple([tuple(pair) for pair in output["headers"]])
-    signer = URLSafeSerializer(auth_app.cookie_secret, "login-redirect")
-    next_sig = quote(signer.dumps("https://demo.example.com{}".format(path)))
+    if next_secret is not None:
+        signer = URLSafeSerializer(next_secret)
+        next_param = "?next_sig=" + quote(
+            signer.dumps("https://demo.example.com{}".format(path))
+        )
+        print(next_param)
+    else:
+        next_param = "?next=" + quote("https://demo.example.com{}".format(path))
     assert (
         b"location",
-        ("https://www.example.com/login?next_sig={}".format(next_sig)).encode("utf8"),
+        ("https://www.example.com/login{}".format(next_param)).encode("utf8"),
     ) in headers
     assert (b"cache-control", b"private") in headers
     assert (await instance.receive_output(1)) == {

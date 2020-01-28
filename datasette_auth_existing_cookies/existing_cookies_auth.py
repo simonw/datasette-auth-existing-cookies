@@ -26,14 +26,16 @@ class ExistingCookiesAuth:
         cookie_secret,
         cookie_ttl=10,
         require_auth=False,
+        next_secret=None,
     ):
         self.app = app
         self.api_url = api_url
         self.auth_redirect_url = auth_redirect_url
         self.original_cookies = original_cookies
+        self.cookie_secret = cookie_secret
         self.cookie_ttl = cookie_ttl
         self.require_auth = require_auth
-        self.cookie_secret = cookie_secret
+        self.next_secret = next_secret
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") != "http":
@@ -121,6 +123,14 @@ class ExistingCookiesAuth:
         response = await httpx.AsyncClient().get(self.api_url, cookies=cookies)
         return response.json()
 
+    def build_auth_redirect(self, next_url):
+        if self.next_secret:
+            signer = URLSafeSerializer(self.next_secret)
+            redirect_param = "?next_sig=" + quote(signer.dumps(next_url))
+        else:
+            redirect_param = "?next=" + quote(next_url)
+        return self.auth_redirect_url + redirect_param
+
     async def handle_missing_auth(self, scope, receive, send):
         # We authenticate the user by forwarding their cookies
         # on to the configured API endpoint and seeing what
@@ -143,16 +153,5 @@ class ExistingCookiesAuth:
             )
         else:
             # Redirect user to the login page
-            signer = URLSafeSerializer(self.cookie_secret, "login-redirect")
-            signed_redirect = signer.dumps(url_from_scope(scope))
-            await send_html(
-                send,
-                "",
-                302,
-                [
-                    [
-                        "location",
-                        self.auth_redirect_url + "?next_sig=" + quote(signed_redirect),
-                    ]
-                ],
-            )
+            redirect_url = self.build_auth_redirect(url_from_scope(scope))
+            await send_html(send, "", 302, [["location", redirect_url]])
