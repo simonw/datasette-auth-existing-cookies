@@ -46,7 +46,7 @@ The URL that the user should be sent to after they log in will be specified as t
 
 It is up to you to program the login endpoint such that it is not vulnerable to an [Unvalidated redirect vulnerability](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html).
 
-One way to do this is by verifying that the URL passed to `?next=` is a URL that belongs to a trusted website.
+One way to do this is by verifying that the URL passed to `?next=` is a URL that belongs to a trusted website. Django's own login view [does this](https://github.com/django/django/blob/50cf183d219face91822c75fa0a15fe2fe3cb32d/django/contrib/auth/views.py#L69-L80) by verifying that the URL hostname is on an approved list.
 
 Another way to do this is to use the `next_secret` configuration parameter to set a signing secret for that URL. This signing secret will be used to construct a `?next_sig=` signed token using the Python [itsdangerous](https://pythonhosted.org/itsdangerous/) module, like this:
 
