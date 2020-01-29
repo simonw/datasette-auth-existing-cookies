@@ -6,8 +6,6 @@
 
 Datasette plugin that authenticates users based on existing domain cookies.
 
-**STATUS: Work in progress**.
-
 ## When to use this
 
 This plugin allows you to build custom authentication for Datasette when you are hosting a Datasette instance on the same domain as another, authenticated website.
@@ -22,25 +20,90 @@ The plugin can protect any hits to any `data.example.com` pages by passing their
 
 You can also use subclassing to decode existing cookies using some other mechanism.
 
+## Configuration
+
+This plugin requires some configuration in the Datasette [metadata.json file](https://datasette.readthedocs.io/en/stable/plugins.html#plugin-configuration).
+
+It needs to know the following:
+
+* Which domain cookies should it be paying attention to? If you are authenticating against Dango this is probably `["sessionid"]`.
+* What's an API it can send the incoming cookies to that will decipher them into some user information?
+* Where should it redirect the user if they need to sign in?
+
+Example configuration setting all three of these values looks like this:
+
+```json
+{
+    "plugins": {
+        "datasette-auth-existing-cookies": {
+            "api_url": "http://www.example.com/user-from-cookies",
+            "auth_redirect_url": "http://www.example.com/login",
+            "original_cookies": ["sessionid"]
+        }
+    }
+}
+```
+
+With this configuration the user's current `sessionid` cookie will be passed to the API URL (as a regular cookie header). That URL should then return either an empty JSON object if the user is not currently signed in:
+
+```json
+{}
+```
+
+Or a JSON object representing the user if they ARE signed in:
+
+```json
+{
+    "id": 123,
+    "username": "simonw"
+}
+```
+
+This object can contain any keys that you like - the information will be stored in a new signed cookie and made available to Datasette code as the `"auth"` dictionary on the ASGI `scope`.
+
+I suggest including at least an `id` and a `username`.
+
+## Templates
+
+You probably want your user's to be able to see that they are signed in. The plugin makes the `auth` data from above directly available within Datasette's templates. You could use a custom `base.html` template (see [template documentation](https://datasette.readthedocs.io/en/stable/custom_templates.html#custom-templates)) that looks like this:
+
+```html+django
+{% extends "default:base.html" %}
+
+{% block extra_head %}
+<style type="text/css">
+.hd .logout {
+    float: right;
+    text-align: right;
+    padding-left: 1em;
+}
+</style>
+{% endblock %}
+
+{% block nav %}
+    {{ super() }}
+    {% if auth and auth.username %}
+        <p class="logout">
+            <strong>{{ auth.username }}</strong> &middot; <a href="https://www.example.com/logout">Log out</a>
+        </p>
+    {% endif %}
+{% endblock %}
+```
+
+## Other options
+
+- `require_auth`. This defaults to `True`. You can set it to `False` if you want unauthenticated users to be able to view the Datasette instance.
+- `cookie_secret`. You can use this to set the signing secret that will be used for the cookie set by this plugin (you should use [secret configuration values](https://datasette.readthedocs.io/en/stable/plugins.html#secret-configuration-values) for this). If you do not set a secret the plugin will create one on first run and store it in an appropriate state directory based on your operating system (the `user_state_dir` according to [appdirs](https://pypi.org/project/appdirs/)).
+- `cookie_ttl`. The plugin sets its own cookie to avoid hitting the backend API for every incoming request. By default it still hits the API at most every 10 seconds, in case the user has signed out on the main site. You can raise or lower the timeout using this setting.
+- `next_secret`. See below.
+
 ## Login redirect mechanism
 
 If the user does not have a valid authentication cookie they will be redirected to an existing login page.
 
 This page is specified using the `auth_redirect_url` setting.
 
-For example:
-
-    {
-        "plugins": {
-            "datasette-auth-existing-cookies": {
-                "api_url": "http://www.example.com/user-from-cookies",
-                "auth_redirect_url": "http://www.example.com/login",
-                "original_cookies": ["sessionid"]
-            }
-        }
-    }
-
-The URL that the user should be sent to after they log in will be specified as the `?next=` parameter to that page, for example:
+Given the above example configuration, the URL that the user should be sent to after they log in will be specified as the `?next=` parameter to that page, for example:
 
     http://www.example.com/login?next=http://foo.example.com/
 
