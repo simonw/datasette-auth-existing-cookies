@@ -39,7 +39,6 @@ async def test_redirects_to_login_page(next_secret, path):
             next_param = "?next_sig=" + quote(
                 signer.dumps("https://demo.example.com{}".format(path))
             )
-            print(next_param)
         else:
             next_param = "?next=" + quote("https://demo.example.com{}".format(path))
         assert "https://www.example.com/login{}".format(next_param) == location
