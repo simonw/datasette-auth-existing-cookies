@@ -14,6 +14,8 @@ def asgi_wrapper(datasette):
     auth_redirect_url = config["auth_redirect_url"]
     original_cookies = config["original_cookies"]
     cookie_secret = config.get("cookie_secret")
+    next_secret = config.get("next_secret")
+    cookie_ttl = int(config.get("cookie_ttl") or 10)
     if cookie_secret is None:
         secrets_path = (
             pathlib.Path(appdirs.user_state_dir("datasette-auth-existing-cookies"))
@@ -39,6 +41,8 @@ def asgi_wrapper(datasette):
             original_cookies=original_cookies,
             require_auth=require_auth,
             cookie_secret=cookie_secret,
+            next_secret=next_secret,
+            cookie_ttl=cookie_ttl,
         )
 
     return wrap_with_asgi_auth

@@ -6,6 +6,7 @@ import pytest
 from itsdangerous import URLSafeSerializer
 
 from datasette_auth_existing_cookies.existing_cookies_auth import ExistingCookiesAuth
+from datasette_auth_existing_cookies import asgi_wrapper
 
 
 class ExistingCookiesAuthTest(ExistingCookiesAuth):
@@ -67,6 +68,29 @@ async def test_allow_access_if_auth_is_returned():
         assert {"id", "name", "ts", "verify_hash"} == set(info.keys())
         assert 1 == info["id"]
         assert "Simon" == info["name"]
+
+
+class FakeDatasette:
+    def __init__(self, config):
+        self.config = config
+
+    def plugin_config(self, name):
+        assert "datasette-auth-existing-cookies" == name
+        return self.config
+
+
+def test_asgi_wrapper():
+    app = object()
+    config = {
+        "api_url": "API-URL",
+        "auth_redirect_url": "auth_redirect_url",
+        "original_cookies": "original_cookies",
+        "cookie_ttl": 20,
+    }
+    wrapper = asgi_wrapper(FakeDatasette(config))
+    wrapped = wrapper(app)
+    assert config.items() <= wrapped.__dict__.items()
+    assert app == wrapped.app
 
 
 async def hello_world_app(scope, receive, send):
