@@ -1,4 +1,5 @@
 from urllib.parse import quote
+import json
 import httpx
 import pytest
 
@@ -43,6 +44,29 @@ async def test_redirects_to_login_page(next_secret, path):
             next_param = "?next=" + quote("https://demo.example.com{}".format(path))
         assert "https://www.example.com/login{}".format(next_param) == location
 
+
+@pytest.mark.asyncio
+async def test_allow_access_if_auth_is_returned():
+    auth_app = ExistingCookiesAuthTest(
+        hello_world_app,
+        api_url="https://api.example.com/user-from-cookie",
+        auth_redirect_url="https://www.example.com/login",
+        original_cookies=("sessionid",),
+        cookie_secret="foo",
+        cookie_ttl=10,
+        require_auth=True,
+    )
+    auth_app.mock_api_json = {"id": 1, "name": "Simon"}
+    async with httpx.AsyncClient(app=auth_app) as client:
+        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        assert 200 == response.status_code
+        # It should set a cookie
+        api_auth = response.cookies['_api_auth']
+        signer = URLSafeSerializer(auth_app.cookie_secret, "auth-cookie")
+        info = signer.loads(api_auth)
+        assert {"id", "name", "ts", "verify_hash"} == set(info.keys())
+        assert 1 == info["id"]
+        assert "Simon" == info["name"]
 
 
 async def hello_world_app(scope, receive, send):
