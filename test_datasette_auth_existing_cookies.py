@@ -1,6 +1,6 @@
 from urllib.parse import quote
+import httpx
 import pytest
-from asgiref.testing import ApplicationCommunicator
 
 from itsdangerous import URLSafeSerializer
 
@@ -28,39 +28,22 @@ async def test_redirects_to_login_page(next_secret, path):
         require_auth=True,
         next_secret=next_secret,
     )
-    instance = ApplicationCommunicator(
-        auth_app,
-        {
-            "type": "http",
-            "scheme": "https",
-            "http_version": "1.0",
-            "method": "GET",
-            "path": path,
-            "headers": [[b"host", b"demo.example.com"]],
-        },
-    )
-    await instance.send_input({"type": "http.request"})
-    output = await instance.receive_output(1)
-    assert "http.response.start" == output["type"]
-    assert 302 == output["status"]
-    headers = tuple([tuple(pair) for pair in output["headers"]])
-    if next_secret is not None:
-        signer = URLSafeSerializer(next_secret)
-        next_param = "?next_sig=" + quote(
-            signer.dumps("https://demo.example.com{}".format(path))
+    async with httpx.AsyncClient(app=auth_app) as client:
+        response = await client.get(
+            "https://demo.example.com{}".format(path), allow_redirects=False
         )
-        print(next_param)
-    else:
-        next_param = "?next=" + quote("https://demo.example.com{}".format(path))
-    assert (
-        b"location",
-        ("https://www.example.com/login{}".format(next_param)).encode("utf8"),
-    ) in headers
-    assert (b"cache-control", b"private") in headers
-    assert (await instance.receive_output(1)) == {
-        "type": "http.response.body",
-        "body": b"",
-    }
+        assert 302 == response.status_code
+        location = response.headers["location"]
+        if next_secret is not None:
+            signer = URLSafeSerializer(next_secret)
+            next_param = "?next_sig=" + quote(
+                signer.dumps("https://demo.example.com{}".format(path))
+            )
+            print(next_param)
+        else:
+            next_param = "?next=" + quote("https://demo.example.com{}".format(path))
+        assert "https://www.example.com/login{}".format(next_param) == location
+
 
 
 async def hello_world_app(scope, receive, send):
