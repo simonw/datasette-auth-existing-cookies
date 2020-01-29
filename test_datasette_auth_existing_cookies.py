@@ -61,7 +61,7 @@ async def test_allow_access_if_auth_is_returned():
         response = await client.get("https://demo.example.com/", allow_redirects=False)
         assert 200 == response.status_code
         # It should set a cookie
-        api_auth = response.cookies['_api_auth']
+        api_auth = response.cookies["_api_auth"]
         signer = URLSafeSerializer(auth_app.cookie_secret, "auth-cookie")
         info = signer.loads(api_auth)
         assert {"id", "name", "ts", "verify_hash"} == set(info.keys())
