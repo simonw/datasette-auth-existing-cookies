@@ -86,6 +86,7 @@ def test_asgi_wrapper():
         "auth_redirect_url": "auth_redirect_url",
         "original_cookies": "original_cookies",
         "cookie_ttl": 20,
+        "cookie_secret": "secret",
     }
     wrapper = asgi_wrapper(FakeDatasette(config))
     wrapped = wrapper(app)
