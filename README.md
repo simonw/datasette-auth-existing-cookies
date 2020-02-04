@@ -44,7 +44,13 @@ Example configuration setting all three of these values looks like this:
 }
 ```
 
-With this configuration the user's current `sessionid` cookie will be passed to the API URL (as a regular cookie header). That URL should then return either an empty JSON object if the user is not currently signed in:
+With this configuration the user's current `sessionid` cookie will be passed to the API URL, as a regular cookie header.
+
+The current HTTP host will be passed as a `?host=xxx` parameter. So for the above example a hit to `https://data.example.com/` would make the following API call:
+
+    http://www.example.com/user-from-cookies?host=data.example.com
+
+The API URL should then return either an empty JSON object if the user is not currently signed in:
 
 ```json
 {}

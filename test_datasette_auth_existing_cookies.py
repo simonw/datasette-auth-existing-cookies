@@ -12,7 +12,8 @@ from datasette_auth_existing_cookies import asgi_wrapper
 class ExistingCookiesAuthTest(ExistingCookiesAuth):
     mock_api_json = {}
 
-    async def json_from_api_for_cookies(self, cookies):
+    async def json_from_api_for_cookies(self, cookies, host):
+        assert "demo.example.com" == host
         return self.mock_api_json
 
 

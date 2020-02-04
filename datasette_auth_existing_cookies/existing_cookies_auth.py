@@ -119,8 +119,9 @@ class ExistingCookiesAuth:
         # Passed all the tests, return the decoded auth cookie
         return decoded
 
-    async def json_from_api_for_cookies(self, cookies):
-        response = await httpx.AsyncClient().get(self.api_url, cookies=cookies)
+    async def json_from_api_for_cookies(self, cookies, host):
+        api_url = self.api_url + "?" + urllib.parse.urlencode({"host": host})
+        response = await httpx.AsyncClient().get(api_url, cookies=cookies)
         return response.json()
 
     def build_auth_redirect(self, next_url):
@@ -136,7 +137,8 @@ class ExistingCookiesAuth:
         # on to the configured API endpoint and seeing what
         # we get back.
         original_cookies, cookie_hash = self.original_cookies_and_hash(scope)
-        auth = await self.json_from_api_for_cookies(original_cookies)
+        host = dict(scope["headers"]).get(b"host", b"").decode("utf8")
+        auth = await self.json_from_api_for_cookies(original_cookies, host)
         # If auth is not '{}' set cookie and forward request
         if auth:
             signer = URLSafeSerializer(self.cookie_secret, "auth-cookie")
