@@ -152,3 +152,25 @@ def verify_next_sig(next_sig):
 ```
 
 If you want to roll your own signing mechanism here you can do so by subclassing `ExistingCookiesAuth` and over-riding the `build_auth_redirect(next_url)` method.
+
+## Permissions
+
+If the current user is signed in but should not have permission to access the Datasette instance, you can indicate so by having the API return the following:
+
+```json
+{
+    "forbidden": "You do not have permission to access this page."
+}
+```
+
+The key must be `"forbidden"`. The value can be any string - it will be displayed to the user.
+
+This is particularly useful when handling multiple different subdomains. You may get an API call to the following:
+
+    http://www.example.com/user-from-cookies?host=a-team.example.com
+
+You can check if the authenticated user (based on their cookies) has permission to access to the `a-team` Datasette instance, and return a `"forbidden"` JSON object if they should not be able to view it.
+
+If a user is allowed to access Datasette (because the API returned their user identity as JSON), the plugin will set a cookie on that subdomain granting them access.
+
+This cookie defaults to expiring after ten seconds. This means that if a user has permission removed for any reason they will still have up to ten seconds in which they will be able to continue accessing Datasette. If this is not acceptable to you the `cookie_ttl` setting can be used to reduce this timeout, at the expense of incurring more frequent API calls to check user permissions.
