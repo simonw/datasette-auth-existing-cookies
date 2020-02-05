@@ -101,6 +101,24 @@ async def test_allow_access_if_auth_is_returned():
         assert "Simon" == info["name"]
 
 
+@pytest.mark.asyncio
+async def test_access_denied():
+    auth_app = ExistingCookiesAuthTest(
+        hello_world_app,
+        api_url="https://api.example.com/user-from-cookie",
+        auth_redirect_url="https://www.example.com/login",
+        original_cookies=("sessionid",),
+        cookie_secret="foo",
+        cookie_ttl=10,
+        require_auth=True,
+    )
+    auth_app.mock_api_json = {"forbidden": "Access not allowed"}
+    async with httpx.AsyncClient(app=auth_app) as client:
+        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        assert 403 == response.status_code
+        assert "Access not allowed" in response.text
+
+
 class FakeDatasette:
     def __init__(self, config):
         self.config = config

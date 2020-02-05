@@ -4,6 +4,7 @@ import hmac
 import httpx
 import json
 import time
+from html import escape
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qsl, urlencode, quote
 
@@ -143,6 +144,11 @@ class ExistingCookiesAuth:
         auth = await self.json_from_api_for_cookies(original_cookies, host)
         # If auth is not '{}' set cookie and forward request
         if auth:
+            # ... unless it's a {"forbidden": reason}
+            if "forbidden" in auth:
+                return await self.access_forbidden(
+                    scope, receive, send, auth["forbidden"]
+                )
             signer = URLSafeSerializer(self.cookie_secret, "auth-cookie")
             signed_cookie = signer.dumps(
                 dict(auth, ts=int(time.time()), verify_hash=cookie_hash)
@@ -162,3 +168,17 @@ class ExistingCookiesAuth:
                 )
             )
             await send_html(send, "", 302, [["location", redirect_url]])
+
+    async def access_forbidden(self, scope, receive, send, reason):
+        html = """
+            <html>
+            <head><title>Access Forbidden</title>
+            <style>body { font-family: sans-serif; padding: 2em; }</style>
+            </head>
+            <body><h1>Access Forbidden</h1>
+            <p>%s</p></body>
+            </html>
+        """ % escape(
+            reason
+        )
+        await send_html(send, html, 403)
