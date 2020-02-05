@@ -30,6 +30,7 @@ async def test_redirects_to_login_page(next_secret, path):
         cookie_ttl=10,
         require_auth=True,
         next_secret=next_secret,
+        trust_x_forwarded_proto=False,
     )
     async with httpx.AsyncClient(app=auth_app) as client:
         response = await client.get(
@@ -45,6 +46,35 @@ async def test_redirects_to_login_page(next_secret, path):
         else:
             next_param = "?next=" + quote("https://demo.example.com{}".format(path))
         assert "https://www.example.com/login{}".format(next_param) == location
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("trust_it", [True, False])
+async def test_redirects_to_login_page_trusting_x_forwarded_proto(trust_it):
+    auth_app = ExistingCookiesAuthTest(
+        hello_world_app,
+        api_url="https://api.example.com/user-from-cookie",
+        auth_redirect_url="https://www.example.com/login",
+        original_cookies=("sessionid",),
+        cookie_secret="foo",
+        cookie_ttl=10,
+        require_auth=True,
+        trust_x_forwarded_proto=trust_it,
+    )
+    async with httpx.AsyncClient(app=auth_app) as client:
+        url = "http://demo.example.com/"
+        headers = {"x-forwarded-proto": "https"}
+        response = await client.get(url, allow_redirects=False, headers=headers,)
+        assert 302 == response.status_code
+        location = response.headers["location"]
+        expected = "https://www.example.com/login?next={}".format(
+            quote("PROTO://demo.example.com/")
+        )
+        if trust_it:
+            assert expected.replace("PROTO", "https") == location
+
+        else:
+            assert expected.replace("PROTO", "http") == location
 
 
 @pytest.mark.asyncio

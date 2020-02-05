@@ -27,6 +27,7 @@ class ExistingCookiesAuth:
         cookie_ttl=10,
         require_auth=False,
         next_secret=None,
+        trust_x_forwarded_proto=False,
     ):
         self.app = app
         self.api_url = api_url
@@ -36,6 +37,7 @@ class ExistingCookiesAuth:
         self.cookie_ttl = cookie_ttl
         self.require_auth = require_auth
         self.next_secret = next_secret
+        self.trust_x_forwarded_proto = trust_x_forwarded_proto
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") != "http":
@@ -154,5 +156,9 @@ class ExistingCookiesAuth:
             )
         else:
             # Redirect user to the login page
-            redirect_url = self.build_auth_redirect(url_from_scope(scope))
+            redirect_url = self.build_auth_redirect(
+                url_from_scope(
+                    scope, trust_x_forwarded_proto=self.trust_x_forwarded_proto
+                )
+            )
             await send_html(send, "", 302, [["location", redirect_url]])

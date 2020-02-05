@@ -60,8 +60,11 @@ def cookies_from_scope(scope):
     return {key: morsel.value for key, morsel in simple_cookie.items()}
 
 
-def url_from_scope(scope):
+def url_from_scope(scope, trust_x_forwarded_proto=False):
     scheme = scope["scheme"].encode("utf8")
+    headers = dict(scope["headers"])
     path = scope.get("raw_path", scope["path"].encode("utf8"))
-    host = dict(scope["headers"])[b"host"]
+    host = headers[b"host"]
+    if trust_x_forwarded_proto and headers.get(b"x-forwarded-proto"):
+        scheme = headers[b"x-forwarded-proto"]
     return (b"%s://%s%s" % (scheme, host, path)).decode("utf8")
