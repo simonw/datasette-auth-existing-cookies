@@ -120,7 +120,7 @@ class ExistingCookiesAuth:
         return decoded
 
     async def json_from_api_for_cookies(self, cookies, host):
-        api_url = self.api_url + "?" + urllib.parse.urlencode({"host": host})
+        api_url = self.api_url + "?" + urlencode({"host": host})
         response = await httpx.AsyncClient().get(api_url, cookies=cookies)
         return response.json()
 
