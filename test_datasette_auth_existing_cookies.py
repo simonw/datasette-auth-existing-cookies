@@ -11,9 +11,12 @@ from datasette_auth_existing_cookies import asgi_wrapper
 
 class ExistingCookiesAuthTest(ExistingCookiesAuth):
     mock_api_json = {}
+    expected_headers = {}
+    called = False
 
-    async def json_from_api_for_cookies(self, cookies, host):
-        assert "demo.example.com" == host
+    async def json_from_api_for_cookies(self, cookies, headers=None):
+        self.called = True
+        assert self.expected_headers == headers
         return self.mock_api_json
 
 
@@ -113,10 +116,36 @@ async def test_access_denied():
         require_auth=True,
     )
     auth_app.mock_api_json = {"forbidden": "Access not allowed"}
+    assert not auth_app.called
     async with httpx.AsyncClient(app=auth_app) as client:
         response = await client.get("https://demo.example.com/", allow_redirects=False)
         assert 403 == response.status_code
         assert "Access not allowed" in response.text
+        assert auth_app.called
+
+
+@pytest.mark.asyncio
+async def test_headers_to_forward():
+    auth_app = ExistingCookiesAuthTest(
+        hello_world_app,
+        api_url="https://api.example.com/user-from-cookie",
+        auth_redirect_url="https://www.example.com/login",
+        original_cookies=("sessionid",),
+        cookie_secret="foo",
+        cookie_ttl=10,
+        require_auth=True,
+        headers_to_forward=["host", "accept-encoding"],
+    )
+    auth_app.mock_api_json = {"id": 1, "name": "Simon"}
+    auth_app.expected_headers = {
+        "host": "demo.example.com",
+        "accept-encoding": "gzip, deflate",
+    }
+    assert not auth_app.called
+    async with httpx.AsyncClient(app=auth_app) as client:
+        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        assert 200 == response.status_code
+        assert auth_app.called
 
 
 class FakeDatasette:

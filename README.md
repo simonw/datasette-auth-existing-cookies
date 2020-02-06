@@ -46,9 +46,15 @@ Example configuration setting all three of these values looks like this:
 
 With this configuration the user's current `sessionid` cookie will be passed to the API URL, as a regular cookie header.
 
-The current HTTP host will be passed as a `?host=xxx` parameter. So for the above example a hit to `https://data.example.com/` would make the following API call:
+You can use the `"headers_to_forward"` configuration option to specify a list of additional headers from the request that should be forwarded on to the `api_url` as querystring parameters. For example, if you add this to the above configuration:
 
-    http://www.example.com/user-from-cookies?host=data.example.com
+```json
+            "headers_to_forward": ["host", "x-forwarded-for"]
+```
+
+Then a hit to `https://data.example.com/` would make the following API call:
+
+    http://www.example.com/user-from-cookies?host=data.example.com&x-forwarded-for=64.18.15.255
 
 The API URL should then return either an empty JSON object if the user is not currently signed in:
 
