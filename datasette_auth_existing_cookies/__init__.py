@@ -17,6 +17,7 @@ def asgi_wrapper(datasette):
     next_secret = config.get("next_secret")
     cookie_ttl = int(config.get("cookie_ttl") or 10)
     trust_x_forwarded_proto = config.get("trust_x_forwarded_proto") or False
+    headers_to_forward = config.get("headers_to_forward") or False
     if cookie_secret is None:
         secrets_path = (
             pathlib.Path(appdirs.user_state_dir("datasette-auth-existing-cookies"))
@@ -45,6 +46,7 @@ def asgi_wrapper(datasette):
             next_secret=next_secret,
             cookie_ttl=cookie_ttl,
             trust_x_forwarded_proto=trust_x_forwarded_proto,
+            headers_to_forward=headers_to_forward,
         )
 
     return wrap_with_asgi_auth
