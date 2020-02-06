@@ -7,7 +7,7 @@ import secrets
 from .existing_cookies_auth import ExistingCookiesAuth
 
 
-@hookimpl
+@hookimpl(trylast=True)
 def asgi_wrapper(datasette):
     config = datasette.plugin_config("datasette-auth-existing-cookies") or {}
     api_url = config["api_url"]
