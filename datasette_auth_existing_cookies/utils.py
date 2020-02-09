@@ -1,6 +1,3 @@
-import base64
-import hashlib
-import hmac
 from http.cookies import SimpleCookie
 import json
 
