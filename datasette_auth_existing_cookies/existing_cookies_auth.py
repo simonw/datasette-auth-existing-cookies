@@ -97,6 +97,8 @@ class ExistingCookiesAuth:
         return original_cookies, cookie_hash
 
     def auth_from_scope(self, scope):
+        if "auth" in scope:
+            return scope["auth"]
         cookies = cookies_from_scope(scope)
         auth_cookie = cookies.get(self.cookie_name)
         if not auth_cookie:

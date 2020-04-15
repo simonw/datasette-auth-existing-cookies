@@ -1,3 +1,4 @@
+from asgiref.testing import ApplicationCommunicator
 from urllib.parse import quote
 import json
 import httpx
@@ -192,3 +193,37 @@ async def hello_world_app(scope, receive, send):
             ),
         }
     )
+
+
+@pytest.mark.asyncio
+async def test_scope_auth_allows_access():
+    # This test can't use httpx because I need a custom scope
+    scope = {
+        "type": "http",
+        "http_version": "1.0",
+        "method": "GET",
+        "path": "/",
+        "headers": [],
+    }
+    auth_app = ExistingCookiesAuthTest(
+        hello_world_app,
+        api_url="https://api.example.com/user-from-cookie",
+        auth_redirect_url="https://www.example.com/login",
+        original_cookies=("sessionid",),
+        cookie_secret="foo",
+        cookie_ttl=10,
+        require_auth=True,
+    )
+    auth_app.mock_api_json = {"forbidden": "Access not allowed"}
+    # With un-authed scope, it should deny
+    instance = ApplicationCommunicator(auth_app, scope)
+    await instance.send_input({"type": "http.request"})
+    output = await instance.receive_output(1)
+    assert 403 == output["status"]
+    # with authed scope it should 200
+    instance = ApplicationCommunicator(
+        auth_app, dict(scope, auth={"id": 1, "name": "authed"})
+    )
+    await instance.send_input({"type": "http.request"})
+    output = await instance.receive_output(1)
+    assert 200 == output["status"]
