@@ -19,6 +19,11 @@ setup(
     long_description_content_type="text/markdown",
     author="Simon Willison",
     url="https://github.com/simonw/datasette-auth-existing-cookies",
+    project_urls={
+        "Issues": "https://github.com/simonw/datasette-auth-existing-cookies/issues",
+        "CI": "https://github.com/simonw/datasette-auth-existing-cookies/actions",
+        "Changelog": "https://github.com/simonw/datasette-auth-existing-cookies/releases",
+    },
     license="Apache License, Version 2.0",
     version=VERSION,
     python_requires=">=3.6",

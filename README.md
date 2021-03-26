@@ -1,8 +1,9 @@
 # datasette-auth-existing-cookies
 
 [![PyPI](https://img.shields.io/pypi/v/datasette-auth-existing-cookies.svg)](https://pypi.org/project/datasette-auth-existing-cookies/)
-[![CircleCI](https://circleci.com/gh/simonw/datasette-auth-existing-cookies.svg?style=svg)](https://circleci.com/gh/simonw/datasette-auth-existing-cookies)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://google.com/simonw/datasette-auth-existing-cookies/blob/master/LICENSE)
+[![Changelog](https://img.shields.io/github/v/release/simonw/datasette-auth-existing-cookies?include_prereleases&label=changelog)](https://github.com/simonw/datasette-auth-existing-cookies/releases)
+[![Tests](https://github.com/simonw/datasette-auth-existing-cookies/workflows/Test/badge.svg)](https://github.com/simonw/datasette-auth-existing-cookies/actions?query=workflow%3ATest)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/datasette-auth-existing-cookies/blob/master/LICENSE)
 
 Datasette plugin that authenticates users based on existing domain cookies.
 
