@@ -68,7 +68,11 @@ async def test_redirects_to_login_page_trusting_x_forwarded_proto(trust_it):
     async with httpx.AsyncClient(app=auth_app) as client:
         url = "http://demo.example.com/"
         headers = {"x-forwarded-proto": "https"}
-        response = await client.get(url, allow_redirects=False, headers=headers,)
+        response = await client.get(
+            url,
+            allow_redirects=False,
+            headers=headers,
+        )
         assert 302 == response.status_code
         location = response.headers["location"]
         expected = "https://www.example.com/login?next={}".format(
