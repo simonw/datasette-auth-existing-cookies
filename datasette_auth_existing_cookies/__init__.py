@@ -1,5 +1,5 @@
 from datasette import hookimpl
-import appdirs
+import hashlib
 import json
 import pathlib
 import secrets
@@ -13,22 +13,16 @@ def asgi_wrapper(datasette):
     api_url = config["api_url"]
     auth_redirect_url = config["auth_redirect_url"]
     original_cookies = config["original_cookies"]
-    cookie_secret = config.get("cookie_secret")
+    cookie_secret = (
+        config.get("cookie_secret")
+        or hashlib.sha1(
+            (datasette._secret + "_datasette-auth-existing-cookies").encode("utf-8")
+        ).hexdigest()
+    )
     next_secret = config.get("next_secret")
     cookie_ttl = int(config.get("cookie_ttl") or 10)
     trust_x_forwarded_proto = config.get("trust_x_forwarded_proto") or False
     headers_to_forward = config.get("headers_to_forward") or False
-    if cookie_secret is None:
-        secrets_path = (
-            pathlib.Path(appdirs.user_state_dir("datasette-auth-existing-cookies"))
-            / "secrets.json"
-        )
-        if secrets_path.exists():
-            cookie_secret = json.load(secrets_path.open())["secret"]
-        else:
-            secrets_path.parent.mkdir(exist_ok=True)
-            cookie_secret = secrets.token_hex(64)
-            secrets_path.write_text(json.dumps({"secret": cookie_secret}))
 
     # require_auth defaults to True unless set otherwise
     require_auth = True
