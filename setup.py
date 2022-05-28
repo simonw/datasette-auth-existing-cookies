@@ -26,7 +26,7 @@ setup(
     },
     license="Apache License, Version 2.0",
     version=VERSION,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     packages=["datasette_auth_existing_cookies"],
     entry_points={
         "datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]
