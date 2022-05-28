@@ -78,7 +78,7 @@ I suggest including at least an `id` and a `username`.
 
 ## Templates
 
-You probably want your user's to be able to see that they are signed in. The plugin makes the `auth` data from above directly available within Datasette's templates. You could use a custom `base.html` template (see [template documentation](https://datasette.readthedocs.io/en/stable/custom_templates.html#custom-templates)) that looks like this:
+You probably want your users to be able to see that they are signed in. The plugin makes the `auth` data from above directly available within Datasette's templates. You could use a custom `base.html` template (see [template documentation](https://datasette.readthedocs.io/en/stable/custom_templates.html#custom-templates)) that looks like this:
 
 ```html+django
 {% extends "default:base.html" %}
