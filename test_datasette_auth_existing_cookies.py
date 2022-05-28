@@ -37,9 +37,7 @@ async def test_redirects_to_login_page(next_secret, path):
         trust_x_forwarded_proto=False,
     )
     async with httpx.AsyncClient(app=auth_app) as client:
-        response = await client.get(
-            "https://demo.example.com{}".format(path), allow_redirects=False
-        )
+        response = await client.get("https://demo.example.com{}".format(path))
         assert 302 == response.status_code
         location = response.headers["location"]
         if next_secret is not None:
@@ -70,7 +68,6 @@ async def test_redirects_to_login_page_trusting_x_forwarded_proto(trust_it):
         headers = {"x-forwarded-proto": "https"}
         response = await client.get(
             url,
-            allow_redirects=False,
             headers=headers,
         )
         assert 302 == response.status_code
@@ -98,7 +95,7 @@ async def test_allow_access_if_auth_is_returned():
     )
     auth_app.mock_api_json = {"id": 1, "name": "Simon"}
     async with httpx.AsyncClient(app=auth_app) as client:
-        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        response = await client.get("https://demo.example.com/")
         assert 200 == response.status_code
         # It should set a cookie
         api_auth = response.cookies["_api_auth"]
@@ -123,7 +120,7 @@ async def test_access_denied():
     auth_app.mock_api_json = {"forbidden": "Access not allowed"}
     assert not auth_app.called
     async with httpx.AsyncClient(app=auth_app) as client:
-        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        response = await client.get("https://demo.example.com/")
         assert 403 == response.status_code
         assert "Access not allowed" in response.text
         assert auth_app.called
@@ -148,7 +145,7 @@ async def test_headers_to_forward():
     }
     assert not auth_app.called
     async with httpx.AsyncClient(app=auth_app) as client:
-        response = await client.get("https://demo.example.com/", allow_redirects=False)
+        response = await client.get("https://demo.example.com/")
         assert 200 == response.status_code
         assert auth_app.called
 
