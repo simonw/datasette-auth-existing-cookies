@@ -13,7 +13,7 @@ def actor_from_request(datasette, request):
     headers_to_pass = config.get("headers")
     ttl = config.get("ttl")
     if ttl is not None:
-        if datasette._auth_existing_cookies_cache is None:
+        if getattr(datasette, "_auth_existing_cookies_cache", None) is None:
             datasette._auth_existing_cookies_cache = TTLCache(1000, ttl=ttl)
     else:
         datasette._auth_existing_cookies_cache = None
