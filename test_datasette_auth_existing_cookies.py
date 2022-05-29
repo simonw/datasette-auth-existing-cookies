@@ -1,6 +1,8 @@
 from datasette.app import Datasette
 import pytest
 
+ACTOR = {"id": "1", "name": "Trish"}
+
 
 @pytest.fixture
 def non_mocked_hosts():
@@ -26,7 +28,7 @@ async def test_no_config_does_nothing():
     ),
 )
 async def test_auth_user_default_passes_cookies(httpx_mock, cookies, expected_cookie):
-    httpx_mock.add_response(json={"id": "1", "name": "Trish"})
+    httpx_mock.add_response(json=ACTOR)
     datasette = Datasette(
         metadata={
             "plugins": {
@@ -37,7 +39,7 @@ async def test_auth_user_default_passes_cookies(httpx_mock, cookies, expected_co
         }
     )
     response = await datasette.client.get("/-/actor.json", cookies=cookies)
-    assert response.json() == {"actor": {"id": "1", "name": "Trish"}}
+    assert response.json() == {"actor": ACTOR}
     request = httpx_mock.get_request()
     if expected_cookie:
         assert request.headers["cookie"] == expected_cookie
@@ -47,7 +49,7 @@ async def test_auth_user_default_passes_cookies(httpx_mock, cookies, expected_co
 
 @pytest.mark.asyncio
 async def test_cookie_configuration(httpx_mock):
-    httpx_mock.add_response(json={"id": "1", "name": "Trish"})
+    httpx_mock.add_response(json=ACTOR)
     datasette = Datasette(
         metadata={
             "plugins": {
@@ -61,6 +63,29 @@ async def test_cookie_configuration(httpx_mock):
     response = await datasette.client.get(
         "/-/actor.json", cookies={"sessionid": "abc", "ignoreme": "1"}
     )
-    assert response.json() == {"actor": {"id": "1", "name": "Trish"}}
+    assert response.json() == {"actor": ACTOR}
     request = httpx_mock.get_request()
     assert request.headers["cookie"] == "sessionid=abc"
+
+
+@pytest.mark.asyncio
+async def test_headers_configuration(httpx_mock):
+    httpx_mock.add_response(json=ACTOR)
+    datasette = Datasette(
+        metadata={
+            "plugins": {
+                "datasette-auth-existing-cookies": {
+                    "api_url": "https://www.example.com/user-from-cookies",
+                    "headers": ["host"],
+                }
+            }
+        }
+    )
+    response = await datasette.client.get(
+        "/-/actor.json", cookies={"sessionid": "abc", "ignoreme": "1"}
+    )
+    assert response.json() == {"actor": ACTOR}
+    request = httpx_mock.get_request()
+    assert (
+        str(request.url) == "https://www.example.com/user-from-cookies?host=localhost"
+    )
