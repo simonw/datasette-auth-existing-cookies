@@ -10,6 +10,13 @@ def non_mocked_hosts():
 
 
 @pytest.mark.asyncio
+async def test_no_config_does_nothing():
+    datasette = Datasette()
+    response = await datasette.client.get("/-/actor.json")
+    assert response.json() == {"actor": None}
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "cookies,expected_cookie",
     (
