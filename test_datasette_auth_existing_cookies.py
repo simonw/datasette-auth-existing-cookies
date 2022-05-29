@@ -43,3 +43,24 @@ async def test_auth_user_default_passes_cookies(httpx_mock, cookies, expected_co
         assert request.headers["cookie"] == expected_cookie
     else:
         assert "cookie" not in request.headers
+
+
+@pytest.mark.asyncio
+async def test_cookie_configuration(httpx_mock):
+    httpx_mock.add_response(json={"id": "1", "name": "Trish"})
+    datasette = Datasette(
+        metadata={
+            "plugins": {
+                "datasette-auth-existing-cookies": {
+                    "api_url": "https://www.example.com/user-from-cookies",
+                    "cookies": ["sessionid"],
+                }
+            }
+        }
+    )
+    response = await datasette.client.get(
+        "/-/actor.json", cookies={"sessionid": "abc", "ignoreme": "1"}
+    )
+    assert response.json() == {"actor": {"id": "1", "name": "Trish"}}
+    request = httpx_mock.get_request()
+    assert request.headers["cookie"] == "sessionid=abc"
