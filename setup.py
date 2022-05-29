@@ -32,6 +32,5 @@ setup(
         "datasette": ["auth_existing_cookies = datasette_auth_existing_cookies"]
     },
     install_requires=["httpx", "itsdangerous"],
-    extras_require={"test": ["datasette", "pytest", "pytest-asyncio", "asgiref"]},
-    tests_require=["datasette-auth-existing-cookies[test]"],
+    extras_require={"test": ["datasette", "pytest", "pytest-asyncio", "pytest-httpx"]},
 )
