@@ -46,8 +46,8 @@ def actor_from_request(datasette, request):
             if cache_key in datasette._auth_existing_cookies_cache:
                 return datasette._auth_existing_cookies_cache[cache_key]
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(api_url, params=header_params, cookies=cookies)
+        async with httpx.AsyncClient(cookies=cookies) as client:
+            response = await client.get(api_url, params=header_params)
 
         if response.status_code != 200:
             actor = None
